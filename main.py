@@ -3,11 +3,12 @@ import sqlite3
 import streamlit as st
 
 from dotenv import load_dotenv, find_dotenv
-load_dotenv(find_dotenv())
 
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
+
+groq_api_key = st.secrets["GROQ_API_KEY"],
 
 def get_sql_query_from_text(text):
     # Initialize the ChatGroq model
@@ -20,10 +21,11 @@ def get_sql_query_from_text(text):
         No preamble, no explanation, just the valid SQL query.
       """)
 
+    
     # Generate SQL query from the input text
     model="llama3-8b-8192"
     llm = ChatGroq(
-         groq_api_key = st.secrets["GROQ_API_KEY"],
+         groq_api_key=groq_api_key,
          model_name=model,
     )
     chain = groq_system_prompt | llm | StrOutputParser()
