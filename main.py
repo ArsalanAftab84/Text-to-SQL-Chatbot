@@ -13,10 +13,8 @@ def get_sql_query_from_text(text):
     # Initialize the ChatGroq model
     groq_system_prompt = ChatPromptTemplate.from_template("""t
         You are a SQL query generator. You will be given a natural language text and you need to generate a SQL query based on that text.
-        Example 1-How many entries are there in the table?:
-            SQL Command will be SELECT COUNT(*) FROM student;
-        Example 2-How many students are there in the course of Data Sciences?:
-             SQL Command will be SELECT COUNT(*) FROM student WHERE course = 'Data Sciences';
+        Example -How many entries are there in the table?:
+            SQL Command will be SELECT COUNT(*) FROM table_name;
         also the sql code should be in the form of a string and should not contain any extra spaces or new lines and
         should not have ''' in beginning and end. Convert the following text into a SQL query: {user_query}.
         No preamble, no explanation, just the valid SQL query.
@@ -34,26 +32,73 @@ def get_sql_query_from_text(text):
     return sql_query
 
 
-def get_data_from_database(sql_query):
-    database="student.db"
-    with sqlite3.connect(database) as conn:
-        return conn.execute(sql_query).fetchall()
+def create_db_from_sql_file(sql_file):
+    try:
+        # Read SQL script
+        sql_script = sql_file.read().decode("utf-8")
+
+        # Create temporary SQLite DB
+        temp_db_path = tempfile.NamedTemporaryFile(delete=False, suffix=".db").name
+        with sqlite3.connect(temp_db_path) as conn:
+            conn.executescript(sql_script)
+        return temp_db_path, None
+    except Exception as e:
+        return None, f"Error while processing SQL file: {e}"
+
+def save_uploaded_db_file(uploaded_file):
+    try:
+        temp_db_path = tempfile.NamedTemporaryFile(delete=False, suffix=".db").name
+        with open(temp_db_path, "wb") as f:
+            f.write(uploaded_file.read())
+        return temp_db_path, None
+    except Exception as e:
+        return None, f"Error while saving DB file: {e}"
+
+def run_query_on_db(db_path, sql_query):
+    try:
+        with sqlite3.connect(db_path) as conn:
+            cursor = conn.execute(sql_query)
+            rows = cursor.fetchall()
+            columns = [desc[0] for desc in cursor.description]
+            return columns, rows
+    except Exception as e:
+        return None, f"SQL Error: {e}"
     
-
 def main():
-    st.set_page_config(page_title="Text-to-SQL Application", page_icon=":guardsman:", layout="wide")
-    print("Welcome to the Text-to-SQL Application!")
-    st.title("Text-to-SQL Application")
+    st.set_page_config(page_title="Text-to-SQL (DB Only)", layout="wide")
+    st.title("📂 SQLite Text-to-SQL App")
+    st.markdown("Upload a `.db` file (SQLite) and ask questions about your data using plain English.")
 
-    user_input = st.text_area("Enter your SQL query here:", height=80)
-    submit=st.button("Submit")
-    if submit:
+    uploaded_file = st.file_uploader("Upload your SQLite `.db` file", type=["db", "sql"])
+    user_input = st.text_area("Ask a question:", height=80)
+
+    if st.button("Submit") and uploaded_file and user_input:
+        # Determine file type and process accordingly
+        if uploaded_file.name.endswith(".db"):
+            db_path, error = save_uploaded_db_file(uploaded_file)
+        elif uploaded_file.name.endswith(".sql"):
+            db_path, error = create_db_from_sql_file(uploaded_file)
+        else:
+            error = "Unsupported file type."
+
+        if error:
+            st.error(error)
+            return
+
         sql_query = get_sql_query_from_text(user_input)
-        st.write(f"Generated SQL query: {sql_query}")
-        retrieve_data = get_data_from_database(sql_query)
-        st.header("Retrieved Data:")
-        for row in retrieve_data:
-            st.header(row)
+        st.code(sql_query, language="sql")
+
+        # Execute query
+        columns, result = run_query_on_db(db_path, sql_query)
+
+        if isinstance(result, str):  # error message
+            st.error(result)
+        elif result:
+            import pandas as pd
+            df = pd.DataFrame(result, columns=columns)
+            st.dataframe(df)
+        else:
+            st.info("No data returned.")
 
 if __name__ == "__main__":
     main()
