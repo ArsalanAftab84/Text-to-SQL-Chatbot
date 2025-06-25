@@ -23,7 +23,7 @@ def get_sql_query_from_text(text):
     # Generate SQL query from the input text
     model="llama3-8b-8192"
     llm = ChatGroq(
-         groq_api_key=os.environ.get("GROQ_API_KEY"),
+         groq_api_key = st.secrets["GROQ_API_KEY"],
          model_name=model,
     )
     chain = groq_system_prompt | llm | StrOutputParser()
