@@ -8,7 +8,7 @@ from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
-groq_api_key = st.secrets["GROQ_API_KEY"],
+groq_api_key = st.secrets["GROQ_API_KEY"]
 
 def get_sql_query_from_text(text):
     # Initialize the ChatGroq model
