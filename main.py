@@ -1,6 +1,7 @@
 import os
 import sqlite3
 import streamlit as st
+import pandas as pd
 import tempfile
 from dotenv import load_dotenv, find_dotenv
 
@@ -10,30 +11,40 @@ from langchain_core.output_parsers import StrOutputParser
 
 groq_api_key = st.secrets["GROQ_API_KEY"]
 
-def get_sql_query_from_text(text):
-    # Initialize the ChatGroq model
-    groq_system_prompt = ChatPromptTemplate.from_template("""
-        You are a SQL query generator. You will be given a natural language text and you need to generate a SQL query based on that text.
-        Example -How many entries are there in the table?:
-        SQL Command will be SELECT COUNT(*) FROM table_name;
-        read through the db files first parse the db, and view all of the columns and table_name 
-        also the sql code should be in the form of a string and should not contain any extra spaces or new lines and
-        should not have ''' in beginning and end. Convert the following text into a SQL query: {user_query}.
-        No preamble, no explanation, just the valid SQL query.
-      """)
+def get_sql_query_from_text(user_query, schema):
+    prompt = ChatPromptTemplate.from_template("""
+You are a SQL query generator.
 
-    
-    # Generate SQL query from the input text
-    model="llama3-8b-8192"
-    llm = ChatGroq(
-         groq_api_key=groq_api_key,
-         model_name=model,
-    )
-    chain = groq_system_prompt | llm | StrOutputParser()
-    sql_query = chain.invoke({"user_query": text})
+Here is the schema of the database:
+{schema}
 
+Given the above schema, generate a valid SQLite SQL query for this question:
+{user_query}
+
+SQL Command (no preamble, no explanation, just one-line valid SQL query string without quotes):
+""")
+
+    llm = ChatGroq(groq_api_key=groq_api_key, model_name="llama3-8b-8192")
+    chain = prompt | llm | StrOutputParser()
+    sql_query = chain.invoke({"user_query": user_query, "schema": schema})
     return sql_query
 
+def extract_db_schema(db_path):
+    schema = ""
+    try:
+        with sqlite3.connect(db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+            tables = [row[0] for row in cursor.fetchall()]
+            for table in tables:
+                schema += f"Table: {table}\n"
+                cursor.execute(f"PRAGMA table_info({table});")
+                columns = cursor.fetchall()
+                for col in columns:
+                    schema += f"  {col[1]} ({col[2]})\n"
+            return schema
+    except Exception as e:
+        return f"Error extracting schema: {e}"
 
 def create_db_from_sql_file(sql_file):
     try:
@@ -87,17 +98,19 @@ def main():
         if error:
             st.error(error)
             return
+        
+        schema = extract_db_schema(db_path)
+        st.expander("🔍 View Extracted Schema").write(schema)
 
-        sql_query = get_sql_query_from_text(user_input)
-        st.code(sql_query, language="sql")
-
+        sql_query = get_sql_query_from_text(user_input, schema)
+        
         # Execute query
         columns, result = run_query_on_db(db_path, sql_query)
 
         if isinstance(result, str):  # error message
             st.error(result)
         elif result:
-            import pandas as pd
+
             df = pd.DataFrame(result, columns=columns)
             st.dataframe(df)
         else:
