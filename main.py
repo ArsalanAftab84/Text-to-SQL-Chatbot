@@ -15,7 +15,8 @@ def get_sql_query_from_text(text):
     groq_system_prompt = ChatPromptTemplate.from_template("""t
         You are a SQL query generator. You will be given a natural language text and you need to generate a SQL query based on that text.
         Example -How many entries are there in the table?:
-            SQL Command will be SELECT COUNT(*) FROM table_name;
+        SQL Command will be SELECT COUNT(*) FROM table_name;
+        read through the db files first parse the db, and view all of the columns and table_name 
         also the sql code should be in the form of a string and should not contain any extra spaces or new lines and
         should not have ''' in beginning and end. Convert the following text into a SQL query: {user_query}.
         No preamble, no explanation, just the valid SQL query.
