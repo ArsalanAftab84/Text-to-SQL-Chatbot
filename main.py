@@ -12,7 +12,7 @@ groq_api_key = st.secrets["GROQ_API_KEY"]
 
 def get_sql_query_from_text(text):
     # Initialize the ChatGroq model
-    groq_system_prompt = ChatPromptTemplate.from_template("""t
+    groq_system_prompt = ChatPromptTemplate.from_template("""
         You are a SQL query generator. You will be given a natural language text and you need to generate a SQL query based on that text.
         Example -How many entries are there in the table?:
         SQL Command will be SELECT COUNT(*) FROM table_name;
