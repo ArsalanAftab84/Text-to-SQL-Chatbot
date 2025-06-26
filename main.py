@@ -1,7 +1,7 @@
 import os
 import sqlite3
 import streamlit as st
-
+import tempfile
 from dotenv import load_dotenv, find_dotenv
 
 from langchain_groq import ChatGroq
