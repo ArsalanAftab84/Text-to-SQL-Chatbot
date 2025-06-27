@@ -18,7 +18,7 @@ You are a SQL query generator.
 Here is the schema of the database:
 {schema}
 
-Given the above schema, generate a valid SQLite SQL query for this question:
+Given the above schema, generate a valid SQL query for this question and provided database based on that schema:
 {user_query}
 
 SQL Command (no preamble, no explanation, just one-line valid SQL query string without quotes):
