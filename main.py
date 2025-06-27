@@ -13,13 +13,12 @@ groq_api_key = st.secrets["GROQ_API_KEY"]
 
 def get_sql_query_from_text(user_query, schema):
     prompt = ChatPromptTemplate.from_template("""
-You are a SQL query generator. You're an expert Analyst proficient in querying Database, finding insights and solving problems related to Database.
-You task is to query the data and sql based on provided schema, files and user query mention in the promt{user_query}.
+You are a SQL query generator. 
 
 schema of the database:
 {schema}
 
-Given the above schema, generate a valid SQL query for this prompt of user from the provided db and sql file based on this schema:
+Given the above schema, generate a valid SQL query for this prompt of user {user_query} from the provided db and sql file based on this schema:
 
 
 SQL Command (no preamble, no explanation, just one-line valid SQL query string without quotes):
