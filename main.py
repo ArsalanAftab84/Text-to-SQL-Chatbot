@@ -83,7 +83,7 @@ def main():
     st.title("📂 SQLite Text-to-SQL App")
     st.markdown("Upload a `.sql` file (SQLite) and ask questions about your data using plain English.")
 
-    uploaded_file = st.file_uploader("Upload your SQLite `.sql` file", type=["sql", "db"])
+    uploaded_file = st.file_uploader("Upload your SQLite `.sql` file", type=["sql"])
     user_input = st.text_area("Ask a question:", height=80)
 
     if st.button("Submit") and uploaded_file and user_input:
