@@ -18,8 +18,8 @@ You are a SQL query generator.
 Here is the schema of the database:
 {schema}
 
-Given the above schema, generate a valid SQL query for this question and provided database based on this schema:
-{user_query}
+Given the above schema, generate a valid SQL query for this prompt of user {user_query} from the provided db and sql file based on this schema:
+
 
 SQL Command (no preamble, no explanation, just one-line valid SQL query string without quotes):
 """)
@@ -83,7 +83,7 @@ def main():
     st.title("📂 SQLite Text-to-SQL App")
     st.markdown("Upload a `.sql` file (SQLite) and ask questions about your data using plain English.")
 
-    uploaded_file = st.file_uploader("Upload your SQLite `.sql` file", type=["sql"])
+    uploaded_file = st.file_uploader("Upload your SQLite `.sql` file", type=["sql", "db"])
     user_input = st.text_area("Ask a question:", height=80)
 
     if st.button("Submit") and uploaded_file and user_input:
