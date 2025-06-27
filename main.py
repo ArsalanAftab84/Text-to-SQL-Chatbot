@@ -79,11 +79,11 @@ def run_query_on_db(db_path, sql_query):
         return None, f"SQL Error: {e}"
     
 def main():
-    st.set_page_config(page_title="Text-to-SQL (DB Only)", layout="wide")
+    st.set_page_config(page_title="Text-to-SQL", layout="wide")
     st.title("📂 SQLite Text-to-SQL App")
-    st.markdown("Upload a `.db` file (SQLite) and ask questions about your data using plain English.")
+    st.markdown("Upload a `.sql` file (SQLite) and ask questions about your data using plain English.")
 
-    uploaded_file = st.file_uploader("Upload your SQLite `.db` file", type=["db", "sql"])
+    uploaded_file = st.file_uploader("Upload your SQLite `.sql` file", type=["sql"])
     user_input = st.text_area("Ask a question:", height=80)
 
     if st.button("Submit") and uploaded_file and user_input:
